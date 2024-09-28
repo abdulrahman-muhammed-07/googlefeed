@@ -1,0 +1,11 @@
+[Unit]
+Description=googlefeed schedule
+
+[Service]
+User= googlefeed
+WorkingDirectory= /home/googlefeed/public_html/laravel
+ExecStart= php artisan schedule:work
+Restart= always
+
+[Install]
+WantedBy=multi-user.target

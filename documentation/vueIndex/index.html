@@ -1,0 +1,171 @@
+<script>
+
+    let headersV = {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${sessionStorage.getItem("auth_google")}`
+    }
+
+    let urlParams = new URLSearchParams(window.location.search),
+        session_token = urlParams.get('session_token'),
+        object = {
+            session_token: session_token
+        };
+
+    let loginWidgets = () => {
+        fetch("https://gpfeed-api.com/api/auth/widget", {
+            method: "post",
+            headers: headersV,
+            body: JSON.stringify(object),
+        }).then(data => {
+            return data.json()
+        }).then(data => {
+            sessionStorage.setItem("auth_google", data.meta.token);
+            if (!data.meta.redirect) {
+                let product_widget = {
+                    product_id: urlParams.get('pid'),
+                    variant_id: urlParams.get('vid'),
+                    // product_widget: new URLSearchParams(window.location.search).has("widgets")
+                }
+                console.log(product_widget)
+                // window.location.replace(`/widgets?product_widget=${encodeURIComponent(JSON.stringify(product_widget))}`);
+
+            } else {
+                let product_widget = {
+                    product_widget: false
+                }
+                // window.location.replace(`/widgets?product_widget=${encodeURIComponent(JSON.stringify(product_widget))}`);
+            }
+
+        }).catch(data => {
+            console.log(data)
+        })
+    }
+
+    let login = () => {
+        console.log('login')
+        // post session token
+        if (urlParams.has('session_token'))
+            fetch("https://gpfeed-api.com/api/auth/login", {
+                method: "post",
+                headers: headersV,
+                body: JSON.stringify(object),
+            }).then(data => {
+                return data.json()
+            }).then(data => {
+                console.log(object)
+                console.log(headersV)
+                console.log(data)
+                sessionStorage.setItem("auth_google", data.meta.token);
+                sessionStorage.setItem("env_status", data.meta.env_status);
+                if (data.meta.redirect) {
+                    window.parent.location.href = data.meta.authUrl;
+                }
+            })
+        else {
+            if (sessionStorage.getItem("auth_google") === null) {
+                window.parent.location.href = "https://admin.Application.com/plugins/google-feed";
+            }
+        }
+
+    }
+
+    function fetchToCode() {
+
+        let objectCode = {
+            code: urlParams.get('code'),
+            scope: urlParams.get('scope'),
+            state: urlParams.get('state')
+        }
+        fetch("https://gpfeed-api.com/api/auth/code", {
+
+            method: "post",
+
+            headers: {
+
+                'Accept': 'application/json',
+
+                'Content-Type': 'application/json',
+
+                'Authorization': `Bearer ${sessionStorage.getItem("auth_google")}`
+            },
+
+            body: JSON.stringify(objectCode),
+
+        }).then(data => {
+
+            return data.json()
+        }).then(data => {
+            console.log(data)
+            let objectCode = {
+                code: urlParams.get('code'),
+                scope: urlParams.get('scope'),
+                state: urlParams.get('state')
+            }
+
+            fetch("https://gpfeed-api.com/api/auth/code", {
+
+                method: "post",
+
+                headers: {
+
+                    'Accept': 'application/json',
+
+                    'Content-Type': 'application/json',
+
+                    'Authorization': `Bearer ${sessionStorage.getItem("auth_google")}`
+                },
+
+                body: JSON.stringify(objectCode),
+
+            }).then(data => {
+
+                return data.json()
+            }).then(data => {
+                console.log(data)
+
+                if (data.acknowledge) {
+                    window.location.href = "https://admin.Application.com/plugins/google-feed"
+                }
+            }).catch(data => {
+                console.log(data)
+            })
+            if (data.acknowledge) {
+                window.location.href = "https://admin.Application.com/plugins/google-feed"
+            }
+        }).catch(data => {
+            console.log(data)
+        })
+    }
+
+    function fetchToUninstall() {
+
+        if (urlParams.has('session_token'))
+            fetch("https://gpfeed-api.com/uninstall", {
+                method: "post",
+                headers: headersV,
+                body: JSON.stringify(object),
+            })
+    }
+
+    if (urlParams.has('code')) {
+
+        console.log('code')
+
+        fetchToCode();
+    }
+
+    if (urlParams.has('uninstall')) {
+
+        console.log('uninstall')
+
+        fetchToUninstall();
+    }
+
+    if (urlParams.has('widgets')) {
+        loginWidgets()
+    } else {
+        login()
+    }
+
+</script>
